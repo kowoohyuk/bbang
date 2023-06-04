@@ -1,5 +1,5 @@
-import { Input, Radio } from "@material-tailwind/react";
-import { useEffect, useState } from "react";
+import { Checkbox, Input, Radio } from "@material-tailwind/react";
+import { useEffect, useRef, useState } from "react";
 import { CodeValue, IngredientRecord, Ingredients, RecipeType } from "../types";
 import { handleRecipe } from "../utils/recipe";
 
@@ -19,6 +19,7 @@ const INITIAL_RECIPE = {
 } as const;
 
 export default function RecipeContainer() {
+  const [isSalted, setIsSalted] = useState(false);
   const [selectedType, setSelectedType] = useState<RecipeType>(
     INITIAL_RECIPE.type
   );
@@ -30,26 +31,44 @@ export default function RecipeContainer() {
       value: INITIAL_RECIPE.value,
     });
 
+  const timeOutRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
     setSelectedTypeRecipes(
       handleRecipe({
         type: selectedType,
         code: "버터",
         value: INITIAL_BUTTER_VALUE[selectedType],
+        isSalted,
       })
     );
   }, [selectedType]);
 
   useEffect(() => {
     setSelectedTypeRecipes(
-      handleRecipe({ type: selectedType, ...lastUserInputCodeValue })
+      handleRecipe({ type: selectedType, ...lastUserInputCodeValue, isSalted })
     );
+  }, [isSalted]);
+
+  useEffect(() => {
+    if (timeOutRef.current) {
+      clearTimeout(timeOutRef.current);
+    }
+    timeOutRef.current = setTimeout(() => {
+      setSelectedTypeRecipes(
+        handleRecipe({
+          type: selectedType,
+          ...lastUserInputCodeValue,
+          isSalted,
+        })
+      );
+    }, 1000);
   }, [lastUserInputCodeValue]);
 
   return (
     <main>
       <form className="bg-white m-auto mt-2 py-4 flex flex-col w-72 ">
-        <div className="m-auto max-w-screen-lg sm:w-64 flex justify-center gap-2">
+        <div className="m-auto max-w-screen-lg sm:w-64 flex px-5 gap-2">
           {TYPES.map((type) => (
             <Radio
               key={type}
@@ -61,13 +80,27 @@ export default function RecipeContainer() {
             />
           ))}
         </div>
-        <div className="m-auto mt-4 max-w-screen-lg sm:w-48 flex flex-col gap-4">
+        {selectedType === "휘낭시에" ? (
+          <div className="m-auto max-w-screen-lg sm:w-64 px-5">
+            <Checkbox
+              name="isSalted"
+              label="가염버터 여부"
+              checked={isSalted}
+              onChange={() => setIsSalted(!isSalted)}
+            />
+          </div>
+        ) : null}
+        <div className="m-auto mt-4 max-w-screen-lg sm:w-64 flex flex-col gap-4 px-5">
           {(Object.keys(selectedTypeRecipes) as Ingredients[]).map((recipe) => (
             <Input
               key={recipe}
               type="number"
               label={recipe}
-              value={selectedTypeRecipes[recipe]}
+              value={
+                lastUserInputCodeValue.code === recipe
+                  ? lastUserInputCodeValue.value
+                  : selectedTypeRecipes[recipe]
+              }
               onChange={(e) => {
                 const { value } = e.target;
                 setLastUserInputCodeValue({

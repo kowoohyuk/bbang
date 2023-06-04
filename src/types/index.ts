@@ -20,3 +20,7 @@ export type CodeValue = {
   code: Ingredients;
   value: number;
 };
+
+export type ButterType = {
+  isSalted?: boolean;
+};

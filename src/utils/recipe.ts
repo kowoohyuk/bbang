@@ -1,19 +1,24 @@
-import { CodeValue, IngredientRecord, RecipeType } from "../types";
+import { ButterType, CodeValue, IngredientRecord, RecipeType } from "../types";
 
 export const handleRecipe = ({
   type,
   code,
   value,
-}: { type: RecipeType } & CodeValue) => {
+  isSalted,
+}: { type: RecipeType } & CodeValue & ButterType) => {
   switch (type) {
     case "휘낭시에":
-      return getFinancierRecipe({ code, value });
+      return getFinancierRecipe({ code, value, isSalted });
     case "마들렌":
       return getMadeleineRecipe({ code, value });
   }
 };
 
-const getFinancierRecipe = ({ code, value }: CodeValue) => {
+const getFinancierRecipe = ({
+  code,
+  value,
+  isSalted,
+}: CodeValue & ButterType) => {
   const baseButterValue = getFinancierBaseButterValue({ code, value });
   return roundToSingleDigit({
     버터: baseButterValue,
@@ -23,7 +28,7 @@ const getFinancierRecipe = ({ code, value }: CodeValue) => {
     아몬드파우더: baseButterValue * 0.327380952380952,
     강력분: baseButterValue * 0.1547619048,
     박력분: baseButterValue * 0.1547619048,
-    소금: baseButterValue * 0.007142857143,
+    소금: isSalted ? 0 : baseButterValue * 0.007142857143,
   });
 };
 
